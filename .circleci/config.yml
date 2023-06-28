@@ -126,12 +126,26 @@ jobs:
       - checkout
       - kubernetes/install-kubectl
       - run:
-          name: Install Dependencies
+          name: "Install AWS CLI"
           command: |
+            if aws --version | grep "aws-cli/" > /dev/null
+            then
+              echo "AWS CLI is already installed, skipping installation."
+              exit 0
+            fi
+
+            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+            unzip awscliv2.zip
+            sudo ./aws/install
+          
+      - run:
+          command: |
+          name: "Update kubeconfig"
             echo $(kubectl version)
             echo $(aws --version)
             echo $(aws eks update-kubeconfig --region << parameters.aws-region >> --name << parameters.cluster-name >>)
             kubectl get pods
+
       - run:      
           name: Create deployment manifest
           command: |
