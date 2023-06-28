@@ -33,23 +33,24 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          keys: [build-app]
+          keys: [build-cache]
       - run:
           name: Build 
-          echo "node:$(node --version)" && echo "npm:$(npm --version)"
-          npm install
-          npm run build
+          command: |
+            echo "node:$(node --version)" && echo "npm:$(npm --version)"
+            npm install
+            npm run build
 
       - save_cache:
           paths: [backend/node_modules]
-          key: backend-build
+          key: build-cache
 
   lint-test-app:
     executor: nodejs-executor
     steps:
       - checkout
       - restore_cache:
-          keys: [build-app]
+          keys: [build-cache]
       - run:
           name: Run app audit
           command: |
