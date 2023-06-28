@@ -146,6 +146,32 @@ jobs:
             echo $(aws eks update-kubeconfig --region << parameters.aws-region >> --name << parameters.cluster-name >>)
             kubectl get pods
 
+      - run:       
+          name: Find Production
+          cmd: |
+            ProdDNS=$(aws cloudformation \
+                      list-exports --query "Exports[?Name==\`clusterDNS=\`].Value" \
+                      --no-paginate --output text)
+            echo 'ProdDNS: $ProdDNS'
+            BlueDNS=$(kubeclt get service/blue-svc)
+            echo 'BlueDNS: $BlueDNS'
+            GreenDNS=$(kubeclt get service/green-svc)
+            echo 'GreenDNS: $GreenDNS'
+            PREFIX=''
+            if  echo BlueDNS| grep $ProdDNS > /dev/null
+            then
+              PREFIX=green
+            fi
+            if  echo GreenDNS| grep $ProdDNS > /dev/null
+            then
+              PREFIX=blue
+            fi
+            if [[ -z $PREFIX ]]
+            then
+              echo "Cannot find matching DNS!"
+              return 0
+            fi
+
       - run:      
           name: Create deployment manifest
           command: |
@@ -153,21 +179,24 @@ jobs:
             # This is to avoid hardcoding the image name in the manifest, to make this
             # demo project more portable.
             BUILD_DATE=$(date '+%Y%m%d%H%M%S')
-            PREFIX="blue" 
+            echo $PREFIX-deploy
             cat deployment/$PREFIX-deployment.yml.template |\
                sed "s|DOCKER_IMAGE_TAG|<< parameters.docker-image-tag >>|\
                 g;s|BUILD_DATE_VALUE|$BUILD_DATE|g;s|VERSION_INFO_VALUE|\
                 << parameters.version-info >>|g" > deployment/app-deployment.yaml
 
             cat deployment/app-deployment.yaml
+          
+      - run: 
+          name: Update deployment
+          cmd: |
+            kubectl apply -f deployment/app-deployment.yaml
 
-      - kubernetes/create-or-update-resource:
-          resource-file-path: "deployment/app-deployment.yaml"
-          get-rollout-status: true
-          resource-name: deployment/$PREFIX-deploy
+      - run: 
+          name: Update services
+          cmd: |
+            kubectl apply -f service/$PREFIX-svc.yaml
 
-      - kubernetes/create-or-update-resource:
-          resource-file-path: "deployment/$PREFIX-svc.yaml"
 
 workflows:
   default:

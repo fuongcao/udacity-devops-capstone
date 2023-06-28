@@ -1,0 +1,40 @@
+Description: >
+  Cloudfront distribution for Production.
+
+Parameters:
+  clusterDNS:
+    Description: Unique identifier.
+    Type: String
+
+Resources:
+  
+  WebpageCDN:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Origins:
+          - DomainName: !Sub "${clusterDNS}"
+            Id: webpage
+            CustomOriginConfig:
+              OriginProtocolPolicy: http-only
+        Enabled: True
+        DefaultRootObject: index.html
+        DefaultCacheBehavior:
+          AllowedMethods:
+            - GET
+            - HEAD
+          CachedMethods:
+            - GET
+            - HEAD
+          Compress: true
+          ForwardedValues:
+            QueryString: False
+          TargetOriginId: webpage
+          ViewerProtocolPolicy: allow-all
+
+Outputs:
+  clusterDNS:
+    Value: !Sub ${clusterDNS}
+    Description: URL for website hosted For Kubernetes CLuster DNS
+    Export:
+      Name: clusterDNS
