@@ -42,7 +42,7 @@ jobs:
             npm run build
 
       - save_cache:
-          paths: [backend/node_modules]
+          paths: [node_modules]
           key: build-cache
 
   lint-test-app:
@@ -56,17 +56,17 @@ jobs:
           command: |
             echo =========== Run audit ==================================
             npm audit
-       - run:
+      - run:
           name: Run app lint check
           command: |   
             echo =========== Run Lint ==================================
             npm run lint
-       - run:
+      - run:
           name: Run app Test
           command: |   
             echo =========== Run Test ==================================
             npm run Test
-         
+
 workflows:
   default:
     jobs:
