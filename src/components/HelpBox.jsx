@@ -1,4 +1,5 @@
 import './HelpBox.css';
+import PropTypes from 'prop-types';
 
 function HelpBox({ title, text }) {
   return (
