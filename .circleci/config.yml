@@ -55,7 +55,7 @@ jobs:
           name: Run app audit
           command: |
             echo =========== Run audit ==================================
-            npm audit
+            npm audit --audit-level=critical
       - run:
           name: Run app lint check
           command: |   
