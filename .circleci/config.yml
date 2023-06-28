@@ -131,7 +131,7 @@ jobs:
             # demo project more portable.
             BUILD_DATE=$(date '+%Y%m%d%H%M%S')
             PREFIX="blue" 
-            cat deployment/$PREFIX-deployment.yml.yml.template |\
+            cat deployment/$PREFIX-deployment.yml.template |\
                sed "s|DOCKER_IMAGE_TAG|<< parameters.docker-image-tag >>|\
                 g;s|BUILD_DATE_VALUE|$BUILD_DATE|g;s|VERSION_INFO_VALUE|\
                 << parameters.version-info >>|g" > deployment/app-deployment.yaml
@@ -145,7 +145,7 @@ jobs:
           get-rollout-status: true
           resource-name: deployment/$PREFIX-deploy
       - kubernetes/create-or-update-resource:
-          resource-file-path: "deployment/app-service.yaml"
+          resource-file-path: "deployment/$PREFIX-svc.yaml"
 
 workflows:
   default:
