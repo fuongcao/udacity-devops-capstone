@@ -139,8 +139,8 @@ jobs:
             sudo ./aws/install
           
       - run:
-          command: |
           name: "Update kubeconfig"
+          command: |
             echo $(kubectl version)
             echo $(aws --version)
             echo $(aws eks update-kubeconfig --region << parameters.aws-region >> --name << parameters.cluster-name >>)
