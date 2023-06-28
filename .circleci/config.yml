@@ -152,9 +152,9 @@ jobs:
                       list-exports --query "Exports[?Name==\`clusterDNS=\`].Value" \
                       --no-paginate --output text)
             echo 'ProdDNS: $ProdDNS'
-            BlueDNS=$(kubeclt get service/blue-svc)
+            BlueDNS=$(kubectl get service/blue-svc)
             echo 'BlueDNS: $BlueDNS'
-            GreenDNS=$(kubeclt get service/green-svc)
+            GreenDNS=$(kubectl get service/green-svc)
             echo 'GreenDNS: $GreenDNS'
             PREFIX=''
             if  echo BlueDNS| grep $ProdDNS > /dev/null
