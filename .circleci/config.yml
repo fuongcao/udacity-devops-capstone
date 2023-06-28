@@ -65,7 +65,7 @@ jobs:
           name: Run app Test
           command: |   
             echo =========== Run Test ==================================
-            npm run Test
+            npm run test
 
 workflows:
   default:
