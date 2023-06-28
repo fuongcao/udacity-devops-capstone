@@ -1,0 +1,77 @@
+version: 2.1
+executors:
+  nodejs-executor:
+  # working directory: /home/circleci/project
+    docker:
+      - image: cimg/node:18.16.1
+
+  awscli-executor:
+  # working directory: root/project
+    docker:
+      - image: amazon/aws-cli:2.12.
+
+orbs:
+  slack: circleci/slack@4.4.2
+  aws-cli: circleci/aws-cli@3.1.5
+
+commands:
+  notify_slack_pass:
+    steps:
+      - slack/notify:
+          event: pass
+          template: basic_success_1
+
+  notify_slack_fail:
+    steps:
+      - slack/notify:
+          event: fail
+          template: basic_fail_1
+
+jobs:
+  build-app:
+    executor: nodejs-executor
+    steps:
+      - checkout
+      - restore_cache:
+          keys: [build-app]
+      - run:
+          name: Build 
+          echo "node:$(node --version)" && echo "npm:$(npm --version)"
+          npm install
+          npm run build
+
+      - save_cache:
+          paths: [backend/node_modules]
+          key: backend-build
+
+  lint-test-app:
+    executor: nodejs-executor
+    steps:
+      - checkout
+      - restore_cache:
+          keys: [build-app]
+      - run:
+          name: Run app audit
+          command: |
+            echo =========== Run audit ==================================
+            npm audit
+       - run:
+          name: Run app lint check
+          command: |   
+            echo =========== Run Lint ==================================
+            npm run lint
+       - run:
+          name: Run app Test
+          command: |   
+            echo =========== Run Test ==================================
+            npm run Test
+         
+workflows:
+  default:
+    jobs:
+      - build-app:
+          context: slack-secrets
+      - lint-test-app:
+          context: slack-secrets
+          requires: [build-app]
+

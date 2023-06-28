@@ -9,4 +9,9 @@ function HelpBox({ title, text }) {
   );
 }
 
+HelpBox.propTypes = {
+  title: PropTypes.string,
+  text: PropTypes.string,
+};
+
 export default HelpBox;
