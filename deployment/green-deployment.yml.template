@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: green-deploy
+  name: green-deploy
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: green
+  template:
+    metadata:
+      name: green
+      labels: 
+        app: green
+    spec:
+      containers:
+      - name: devops-capstone
+        image: caohoaiphuong/devops-capstone:DOCKER_IMAGE_TAG
+        imagePullPolicy: Always
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "128m"
+          limits:
+            memory: "256Mi"
+            cpu: "256m"
+        env:
+        - name: VERSION_INFO
+          value: "VERSION_INFO_VALUE"
+        - name: BUILD_DATE
+          value: "BUILD_DATE_VALUE"
+        ports:
+        - containerPort: 80

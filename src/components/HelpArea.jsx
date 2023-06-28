@@ -4,18 +4,18 @@ import './HelpArea.css';
 const HELP_ITEMS = [
   {
     id: 'h1',
-    title: 'What is Git?',
-    text: 'Git is a version control system, helping you to manage your code and create code snapshots.',
+    title: 'What is CI?',
+    text: 'Continuous integration (CI) is the practice of automating the integration of code changes from multiple contributors into a single software project.',
   },
   {
     id: 'h2',
-    title: 'What is GitHub?',
-    text: 'GitHub is a company and online offering, providing you with tons of Git-related services (e.g., cloud repositories).',
+    title: 'What is CD?',
+    text: 'The "CD" in CI/CD refers to continuous delivery and/or continuous deployment, which are related concepts that sometimes get used interchangeably. Both are about automating further stages of the pipeline.',
   },
   {
     id: 'h3',
-    title: 'What is GitHub Actions?',
-    text: 'GitHub Actions is an automation service (or CI / CD service) that helps you automate repository-related workflows and processes.',
+    title: 'What Is DevOps?',
+    text: 'DevOps is a set of practices, tools, and a cultural philosophy that automate and integrate the processes between software development and IT teams. It emphasizes team empowerment, cross-team communication and collaboration, and technology automation.',
   },
 ];
 

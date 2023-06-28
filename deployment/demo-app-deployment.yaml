@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: blue-deploy
+  name: blue-deploy
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: blue
+  template:
+    metadata:
+      name: blue
+      labels:
+        app: blue
+    spec:
+      containers:
+      - name: devops-capstone
+        image: caohoaiphuong/devops-capstone:123
+        imagePullPolicy: Always
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "128m"
+          limits:
+            memory: "256Mi"
+            cpu: "256m"
+        env:
+        - name: VERSION_INFO
+          value: "	v1"
+        - name: BUILD_DATE
+          value: "20230628230224"
+        ports:
+        - containerPort: 80

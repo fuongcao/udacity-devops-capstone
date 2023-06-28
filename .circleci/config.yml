@@ -14,6 +14,7 @@ orbs:
   slack: circleci/slack@4.4.2
   aws-cli: circleci/aws-cli@3.1.5
   docker: circleci/docker@2.2.0
+  aws-eks: circleci/aws-eks@0.2.0
 
 commands:
   notify_slack_pass:
@@ -75,7 +76,7 @@ jobs:
     executor: docker/docker
     environment:
       DOCKER_IMAGE: devops-capstone
-      DOCKER_TAG: latest
+      DOCKER_TAG: build-${CIRCLE_WORKFLOW_ID:0:7}
     steps:
       - setup_remote_docker
       - checkout
@@ -97,8 +98,54 @@ jobs:
       - run:
           command: |
             echo "Digest is: $(</tmp/digest.txt)"
-          
-          
+
+  deploy-eks:
+    executor: aws-eks/python3
+    parameters:
+      cluster-name:
+        description: |
+          Name of the EKS cluster
+        type: string
+      docker-image-tag:
+        description: |
+          Name of the docker image to be deployed
+        type: string
+      version-info:
+        description: |
+          App version information
+        type: string
+      aws-region:
+        description: |
+          AWS region
+        type: string
+        default: "us-east-1"
+
+    steps:
+      - checkout
+      - run:
+          name: Create deployment manifest
+          command: |
+            # Replace the placeholders in the manifest with the intended values.
+            # This is to avoid hardcoding the image name in the manifest, to make this
+            # demo project more portable.
+            BUILD_DATE=$(date '+%Y%m%d%H%M%S')
+            PREFIX="blue" 
+            cat deployment/$PREFIX-deployment.yml.yml.template |\
+               sed "s|DOCKER_IMAGE_TAG|<< parameters.docker-image-tag >>|\
+                g;s|BUILD_DATE_VALUE|$BUILD_DATE|g;s|VERSION_INFO_VALUE|\
+                << parameters.version-info >>|g" > deployment/app-deployment.yaml
+
+      - aws-eks/update-kubeconfig-with-authenticator:
+          cluster-name: << parameters.cluster-name >>
+          install-kubectl: true
+          aws-region: << parameters.aws-region >>
+      - kubernetes/create-or-update-resource:
+          resource-file-path: "deployment/app-deployment.yaml"
+          get-rollout-status: true
+          resource-name: deployment/$PREFIX-deploy
+      - kubernetes/create-or-update-resource:
+          resource-file-path: "deployment/app-service.yaml"
+
 workflows:
   default:
     jobs:
@@ -110,4 +157,10 @@ workflows:
       - build-docker:
           context: slack-secrets
           requires: [lint-test-app]
+      - deploy-eks:
+          cluster-name: eksctl-demo
+          aws-region: $AWS_DEFAULT_REGION
+          docker-image-tag: "build-${CIRCLE_WORKFLOW_ID:0:7}"
+          version-info: "build-${CIRCLE_WORKFLOW_ID:0:7}"
+          requires: [build-docker]
 
