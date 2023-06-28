@@ -15,7 +15,7 @@ orbs:
   docker: circleci/docker@2.2.0
   aws-cli: circleci/aws-cli@3.1.5
   aws-eks: circleci/aws-eks@0.2.0
-  kubernetes: circleci/kubernetes@0.3.0
+  kubernetes: circleci/kubernetes@1.3.1
 
 commands:
   notify_slack_pass:
@@ -74,8 +74,7 @@ jobs:
             npm run test
 
   build-docker:
-    docker:
-      - image: cimg/base:stable
+    executor: docker/docker
     environment:
       DOCKER_IMAGE: devops-capstone
       DOCKER_TAG: build-${CIRCLE_WORKFLOW_ID:0:7}
@@ -102,7 +101,8 @@ jobs:
             echo "Digest is: $(</tmp/digest.txt)"
 
   deploy-eks:
-    executor: awscli-executor
+    docker:
+      - image: cimg/base:stable
     parameters:
       cluster-name:
         description: |
@@ -131,6 +131,7 @@ jobs:
             echo $(kubectl --version)
             echo $(aws --version)
             echo $(aws eks update-kubeconfig --region << parameters.aws-region >> --name << parameters.cluster-name >>)
+            kubectl get pods
       - run:      
           name: Create deployment manifest
           command: |
