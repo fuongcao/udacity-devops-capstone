@@ -74,7 +74,8 @@ jobs:
             npm run test
 
   build-docker:
-    executor: docker/docker
+    docker:
+      - image: cimg/base:stable
     environment:
       DOCKER_IMAGE: devops-capstone
       DOCKER_TAG: build-${CIRCLE_WORKFLOW_ID:0:7}
@@ -127,8 +128,8 @@ jobs:
       - run:
           name: Install Dependencies
           command: |
-            echo $(aws --version)
             echo $(kubectl --version)
+            echo $(aws --version)
             echo $(aws eks update-kubeconfig --region << parameters.aws-region >> --name << parameters.cluster-name >>)
       - run:      
           name: Create deployment manifest
@@ -161,18 +162,17 @@ jobs:
 workflows:
   default:
     jobs:
-      - build-app:
-          context: slack-secrets
-      - lint-test-app:
-          context: slack-secrets
-          requires: [build-app]
-      - build-docker:
-          context: slack-secrets
-          requires: [lint-test-app]
+      # - build-app:
+      #     context: slack-secrets
+      # - lint-test-app:
+      #     context: slack-secrets
+      #     requires: [build-app]
+      # - build-docker:
+      #     context: slack-secrets
+      #     requires: [lint-test-app]
       - deploy-eks:
           cluster-name: eksctl-demo
           aws-region: $AWS_DEFAULT_REGION
-          docker-image-tag: "build-${CIRCLE_WORKFLOW_ID:0:7}"
+          docker-image-tag: "latest"
           version-info: "build-${CIRCLE_WORKFLOW_ID:0:7}"
-          requires: [build-docker]
 
