@@ -161,33 +161,29 @@ jobs:
 
             cat deployment/app-deployment.yaml
 
-      # - aws-eks/update-kubeconfig-with-authenticator:
-      #     cluster-name: << parameters.cluster-name >>
-      #     install-kubectl: true
-      #     aws-region: << parameters.aws-region >>
+      - kubernetes/create-or-update-resource:
+          resource-file-path: "deployment/app-deployment.yaml"
+          get-rollout-status: true
+          resource-name: deployment/$PREFIX-deploy
 
-      # - kubernetes/create-or-update-resource:
-      #     resource-file-path: "deployment/app-deployment.yaml"
-      #     get-rollout-status: true
-      #     resource-name: deployment/$PREFIX-deploy
-
-      # - kubernetes/create-or-update-resource:
-      #     resource-file-path: "deployment/$PREFIX-svc.yaml"
+      - kubernetes/create-or-update-resource:
+          resource-file-path: "deployment/$PREFIX-svc.yaml"
 
 workflows:
   default:
     jobs:
-      # - build-app:
-      #     context: slack-secrets
-      # - lint-test-app:
-      #     context: slack-secrets
-      #     requires: [build-app]
-      # - build-docker:
-      #     context: slack-secrets
-      #     requires: [lint-test-app]
+      - build-app:
+          context: slack-secrets
+      - lint-test-app:
+          context: slack-secrets
+          requires: [build-app]
+      - build-docker:
+          context: slack-secrets
+          requires: [lint-test-app]
       - deploy-eks:
           cluster-name: eksctl-demo
           aws-region: $AWS_DEFAULT_REGION
-          docker-image-tag: "latest"
+          docker-image-tag:  "build-${CIRCLE_WORKFLOW_ID:0:7}"
           version-info: "build-${CIRCLE_WORKFLOW_ID:0:7}"
+          requires: [build-docker]
 
