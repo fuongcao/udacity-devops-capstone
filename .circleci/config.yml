@@ -105,4 +105,7 @@ workflows:
       - lint-test-app:
           context: slack-secrets
           requires: [build-app]
+      - build-docker:
+          context: slack-secrets
+          requires: [lint-test-app]
 
