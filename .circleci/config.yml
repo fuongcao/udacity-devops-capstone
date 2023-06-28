@@ -13,6 +13,7 @@ executors:
 orbs:
   slack: circleci/slack@4.4.2
   aws-cli: circleci/aws-cli@3.1.5
+  docker: circleci/docker@2.2.0
 
 commands:
   notify_slack_pass:
@@ -33,7 +34,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          keys: [build-cache]
+          keys: [build-cache, dist-cache]
       - run:
           name: Build 
           command: |
@@ -44,6 +45,9 @@ jobs:
       - save_cache:
           paths: [node_modules]
           key: build-cache
+      - save_cache:
+          paths: [dist]
+          key: dist-cache
 
   lint-test-app:
     executor: nodejs-executor
@@ -66,6 +70,32 @@ jobs:
           command: |   
             echo =========== Run Test ==================================
             npm run test
+
+  build-docker:
+    executor: docker/docker
+    environment:
+      DOCKER_IMAGE: devops-capstone
+      DOCKER_TAG: latest
+    steps:
+      - setup_remote_docker
+      - checkout
+      - restore_cache:
+          keys: [dist-cache]
+      - docker/check:
+          docker-username: DOCKER_USER
+          docker-password: DOCKER_PASSWORD
+
+      - docker/build:
+          image: $DOCKER_USER/$DOCKER_IMAGE
+          tag: $DOCKER_TAG
+
+      - docker/push:
+          digest-path: /tmp/digest.txt
+          image: $DOCKER_USER/$DOCKER_IMAGE
+          tag: $
+          
+          
+
 
 workflows:
   default:
