@@ -128,7 +128,7 @@ jobs:
       - run:
           name: Install Dependencies
           command: |
-            echo $(kubectl --version)
+            echo $(kubectl version)
             echo $(aws --version)
             echo $(aws eks update-kubeconfig --region << parameters.aws-region >> --name << parameters.cluster-name >>)
             kubectl get pods
