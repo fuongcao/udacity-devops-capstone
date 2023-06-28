@@ -92,11 +92,13 @@ jobs:
       - docker/push:
           digest-path: /tmp/digest.txt
           image: $DOCKER_USER/$DOCKER_IMAGE
-          tag: $
+          tag: $DOCKER_TAG
+
+      - run:
+          command: |
+            echo "Digest is: $(</tmp/digest.txt)"
           
           
-
-
 workflows:
   default:
     jobs:
