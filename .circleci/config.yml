@@ -159,31 +159,31 @@ jobs:
             ProdDNS=$(aws cloudformation \
                       list-exports --query "Exports[?Name==\`clusterDNS\`].Value" \
                       --no-paginate --output text)
-            echo 'ProdDNS: ${ProdDNS}'
+            echo ProdDNS:$ProdDNS
 
             BlueDNS=$(kubectl get service blue-svc | awk '{print $4}' | tail -n1)
-            echo 'BlueDNS: ${BlueDNS}'
+            echo BlueDNS:$BlueDNS
 
             GreenDNS=$(kubectl get service green-svc | awk '{print $4}' | tail -n1)
-            echo 'GreenDNS: ${GreenDNS}'
+            echo GreenDNS:$GreenDNS
             
-            if (( $BlueDNS == $ProdDNS ))
+            if [[ "$BlueDNS" = "$ProdDNS" ]]
             then
               PREFIX=green
-              nProdDNS=$GreenDNS
+              NProdDNS=$GreenDNS
             fi
-            if (( $GreenDNS==$ProdDNS ))
+            if [[ "$GreenDNS" = "$ProdDNS" ]]
             then
               PREFIX=blue
-              nProdDNS=$BlueDNS
+              NProdDNS=$BlueDNS
             fi
             if [[ -z $PREFIX ]]
             then
               echo "Cannot find matching DNS!"
               return 0
             fi
-            echo 'nProdDNS: ${nProdDNS}'
-            echo $nProdDNS > /home/circleci/workspace/nprod_dns
+            echo NProdDNS:$NProdDNS
+            echo $NProdDNS > /home/circleci/workspace/nprod_dns
             cat /home/circleci/workspace/nprod_dns
             
       - run:      
