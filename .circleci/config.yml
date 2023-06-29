@@ -127,12 +127,6 @@ jobs:
           AWS region
         type: string
         default: "us-east-1"
-
-    environment:
-      ProdDNS: ''
-      NProdDNS: ''
-      PREFIX: ''
-
     steps:
       - checkout
       - kubernetes/install-kubectl
@@ -190,6 +184,9 @@ jobs:
             echo ProdDNS:$ProdDNS
             echo NProdDNS:$NProdDNS
             echo PREFIX:$PREFIX
+            echo "export ProdDNS=$ProdDNS" >> "$BASH_ENV"
+            echo "export NProdDNS=$NProdDNS" >> "$BASH_ENV"
+            echo "export PREFIX=$PREFIX" >> "$BASH_ENV"
             echo $NProdDNS > /home/circleci/workspace/nprod_dns
             cat /home/circleci/workspace/nprod_dns
             
