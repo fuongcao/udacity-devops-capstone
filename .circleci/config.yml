@@ -35,8 +35,6 @@ jobs:
     executor: nodejs-executor
     steps:
       - checkout
-      - restore_cache:
-          keys: [build-cache, dist-cache]
       - run:
           name: Add build number to .env.production
           command:
@@ -53,7 +51,7 @@ jobs:
           key: build-cache
       - save_cache:
           paths: [dist]
-          key: dist-cache
+          key: dist-cache-${CIRCLE_WORKFLOW_ID:0:7}
 
   lint-test-app:
     executor: nodejs-executor
@@ -87,7 +85,7 @@ jobs:
       - setup_remote_docker
       - checkout
       - restore_cache:
-          keys: [dist-cache]
+          keys: [dist-cache-${CIRCLE_WORKFLOW_ID:0:7}]
       - docker/check:
           docker-username: DOCKER_USER
           docker-password: DOCKER_PASSWORD
