@@ -310,7 +310,7 @@ jobs:
             aws cloudformation deploy \
               --template-file deployment/stack/cloudfront.yml \
               --stack-name "BlueGreenStack" \
-              --parameter-overrides clusterDNS=$NPROD_DNS
+              --parameter-overrides clusterDNS=$NPROD_DNS \
               --tags project=udapeople Name=BlueGreen
 
 workflows:
