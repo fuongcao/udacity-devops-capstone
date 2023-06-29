@@ -128,6 +128,11 @@ jobs:
         type: string
         default: "us-east-1"
 
+    environment:
+      ProdDNS: ''
+      NProdDNS: ''
+      PREFIX: ''
+
     steps:
       - checkout
       - kubernetes/install-kubectl
@@ -182,7 +187,9 @@ jobs:
               echo "Cannot find matching DNS!"
               return 0
             fi
+            echo ProdDNS:$ProdDNS
             echo NProdDNS:$NProdDNS
+            echo PREFIX:$PREFIX
             echo $NProdDNS > /home/circleci/workspace/nprod_dns
             cat /home/circleci/workspace/nprod_dns
             
@@ -197,7 +204,7 @@ jobs:
             cat deployment/$PREFIX-deployment.yml.template |\
                sed "s|DOCKER_IMAGE_TAG|<< parameters.docker-image-tag >>|\
                g;s|BUILD_DATE_VALUE|$BUILD_DATE|g;s|VERSION_INFO_VALUE|<< parameters.version-info >>|\
-               g" > deployment/app-deployment.yml
+               g" > ../../deployment/app-deployment.yml
 
             cat deployment/app-deployment.yml
           
