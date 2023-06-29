@@ -201,7 +201,7 @@ jobs:
             cat deployment/$PREFIX-deployment.yml.template |\
                sed "s|DOCKER_IMAGE_TAG|<< parameters.docker-image-tag >>|\
                g;s|BUILD_DATE_VALUE|$BUILD_DATE|g;s|VERSION_INFO_VALUE|<< parameters.version-info >>|\
-               g" > ../../deployment/app-deployment.yml
+               g" > deployment/app-deployment.yml
 
             cat deployment/app-deployment.yml
           
@@ -213,7 +213,7 @@ jobs:
       - run: 
           name: Update services
           command: |
-            kubectl apply -f service/$PREFIX-svc.yml
+            kubectl apply -f deployment/$PREFIX-svc.yml
 
       - persist_to_workspace:
           root: /home/circleci/workspace
