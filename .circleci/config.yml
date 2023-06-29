@@ -42,6 +42,7 @@ jobs:
       - run:
           name: Build 
           command: |
+            cat .env.production
             echo "node:$(node --version)" && echo "npm:$(npm --version)"
             npm install
             npm run build
@@ -52,7 +53,7 @@ jobs:
 
       - save_cache:
           paths: [dist]
-          key: dist-cache-${CIRCLE_WORKFLOW_ID:0:7}
+          key: dist-cache-{{ .Environment.CIRCLE_WORKFLOW_ID }}
 
   lint-test-app:
     executor: nodejs-executor
@@ -95,7 +96,8 @@ jobs:
       - setup_remote_docker
       - checkout
       - restore_cache:
-          keys: dist-cache-${CIRCLE_WORKFLOW_ID:0:7}
+          keys: 
+            - dist-cache-{{ .Environment.CIRCLE_WORKFLOW_ID }}
       - docker/check:
           docker-username: DOCKER_USER
           docker-password: DOCKER_PASSWORD
