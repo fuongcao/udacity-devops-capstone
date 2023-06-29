@@ -38,7 +38,8 @@ jobs:
       - run:
           name: Add build number to .env.production
           command:
-            echo 'VITE_VERSION_INFO=build-${CIRCLE_WORKFLOW_ID:0:7}' > .env.production
+            echo "VITE_VERSION_INFO=build-${CIRCLE_WORKFLOW_ID:0:7}" > .env.production
+            cat .env.production
       - run:
           name: Build 
           command: |
@@ -85,7 +86,7 @@ jobs:
       - setup_remote_docker
       - checkout
       - restore_cache:
-          keys: [dist-cache-${CIRCLE_WORKFLOW_ID:0:7}]
+          keys: dist-cache-${CIRCLE_WORKFLOW_ID:0:7}
       - docker/check:
           docker-username: DOCKER_USER
           docker-password: DOCKER_PASSWORD
