@@ -60,6 +60,16 @@ jobs:
       - checkout
       - restore_cache:
           keys: [build-cache]
+
+      - run:
+          name: Install Hadolint
+          command: |
+          	sudo wget -O /bin/hadolint https://github.com/hadolint/hadolint/releases/download/v1.16.3/hadolint-Linux-x86_64 &&\
+	          sudo chmod +x /bin/hadolint
+      - run:
+          name: Run Docker lint
+          command: |
+            hadolint Dockerfile   
       - run:
           name: Run app audit
           command: |
@@ -265,8 +275,7 @@ jobs:
             echo "NPROD_DNS:$NPROD_DNS"
             kubectl get pods
             kubectl get services
-            sleep 15
-            curl -s --retry 10 "http://$NPROD_DNS" | grep "build-${CIRCLE_WORKFLOW_ID:0:7}"
+            curl -s "http://$NPROD_DNS" | grep "Vite + React"
 
   promote_production:
     executor: awscli-executor
@@ -278,7 +287,7 @@ jobs:
           name: Routing traffic
           command: |
             NPROD_DNS=$(cat /home/circleci/workspace/nprod_dns)
-          
+            echo "NPROD_DNS:$NPROD_DNS"
             aws cloudformation deploy \
               --template-file deployment/stack/cloudfront.yml \
               --stack-name "BlueGreenStack" \
@@ -306,4 +315,5 @@ workflows:
           cluster-name: devops-capstone
           aws-region: $AWS_DEFAULT_REGION
           requires: [deploy-eks]
+          
 
