@@ -11,3 +11,9 @@ lint:
 	echo "Run lint for sample project"
 	npm run lint
 	echo "Run test for sample project"
+
+publish-docker:
+	npm install
+	npm run build
+	cd deployment/scripts
+	bash ./publish_docker.sh

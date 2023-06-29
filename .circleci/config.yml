@@ -35,8 +35,17 @@ jobs:
     executor: nodejs-executor
     steps:
       - checkout
+      - run:
+          name: Where iam?
+          command: |
+            pwd
+            ls -la ~/
       - restore_cache:
           keys: [build-cache, dist-cache]
+      - run:
+          name: Add build number to .env.production
+          command:
+            echo 'VITE_VERSION_INFO=build-${CIRCLE_WORKFLOW_ID:0:7}' > .env.production
       - run:
           name: Build 
           command: |
@@ -81,6 +90,11 @@ jobs:
     steps:
       - setup_remote_docker
       - checkout
+      - run:
+          name: Where iam?
+          command: |
+            pwd
+            ls -la ~/
       - restore_cache:
           keys: [dist-cache]
       - docker/check:
@@ -124,10 +138,16 @@ jobs:
 
     steps:
       - checkout
+      - run:
+          name: Where iam?
+          command: |
+            pwd
+            ls -la ~/
       - kubernetes/install-kubectl
       - run:
           name: "Install AWS CLI"
           command: |
+            ls -la
             if aws --version | grep "aws-cli/" > /dev/null
             then
               echo "AWS CLI is already installed, skipping installation."
@@ -148,29 +168,37 @@ jobs:
       - run:       
           name: Find Production
           command: |
+            mkdir workspace
             ProdDNS=$(aws cloudformation \
-                      list-exports --query "Exports[?Name==\`clusterDNS=\`].Value" \
+                      list-exports --query "Exports[?Name==\`clusterDNS\`].Value" \
                       --no-paginate --output text)
-            echo 'ProdDNS: $ProdDNS'
-            BlueDNS=$(kubectl get service/blue-svc)
-            echo 'BlueDNS: $BlueDNS'
-            GreenDNS=$(kubectl get service/green-svc)
-            echo 'GreenDNS: $GreenDNS'
-            PREFIX=''
-            if  echo BlueDNS| grep $ProdDNS > /dev/null
+            echo 'ProdDNS: ${ProdDNS}'
+
+            BlueDNS=$(kubectl get service blue-svc | awk '{print $4}' | tail -n1)
+            echo 'BlueDNS: ${BlueDNS}'
+
+            GreenDNS=$(kubectl get service green-svc | awk '{print $4}' | tail -n1)
+            echo 'GreenDNS: ${GreenDNS}'
+            
+            if (( $BlueDNS == $ProdDNS ))
             then
               PREFIX=green
+              nProdDNS=$GreenDNS
             fi
-            if  echo GreenDNS| grep $ProdDNS > /dev/null
+            if (( $GreenDNS==$ProdDNS ))
             then
               PREFIX=blue
+              nProdDNS=$BlueDNS
             fi
             if [[ -z $PREFIX ]]
             then
               echo "Cannot find matching DNS!"
               return 0
             fi
-
+            echo 'nProdDNS: ${nProdDNS}'
+            echo $nProdDNS > workflows/np-dns
+            cat workflows/nprod-dns
+            
       - run:      
           name: Create deployment manifest
           command: |
@@ -181,21 +209,60 @@ jobs:
             echo $PREFIX-deploy
             cat deployment/$PREFIX-deployment.yml.template |\
                sed "s|DOCKER_IMAGE_TAG|<< parameters.docker-image-tag >>|\
-                g;s|BUILD_DATE_VALUE|$BUILD_DATE|g;s|VERSION_INFO_VALUE|\
-                << parameters.version-info >>|g" > deployment/app-deployment.yaml
+               g;s|BUILD_DATE_VALUE|$BUILD_DATE|g;s|VERSION_INFO_VALUE|<< parameters.version-info >>|\
+               g" > deployment/app-deployment.yml
 
-            cat deployment/app-deployment.yaml
+            cat deployment/app-deployment.yml
           
       - run: 
           name: Update deployment
           command: |
-            kubectl apply -f deployment/app-deployment.yaml
+            kubectl apply -f deployment/app-deployment.yml
 
       - run: 
           name: Update services
           command: |
-            kubectl apply -f service/$PREFIX-svc.yaml
+            kubectl apply -f service/$PREFIX-svc.yml
 
+      - persist_to_workspace:
+          root: workspace/
+          paths:
+            - nprod-dns
+
+
+  smoke-test:
+    docker:
+      - image: cimg/base:stable
+    parameters:
+      cluster-name:
+        description: |
+          Name of the EKS cluster
+        type: string
+    steps:
+      - checkout
+      - run:
+          name: Where iam?
+          command: |
+            pwd
+            ls -la ~/
+      - kubernetes/install-kubectl
+      - run:
+          name: Wait for service to be ready
+          command: |
+            kubectl get pods
+            kubectl get services
+            sleep 30
+            for attempt in {1..20}; do
+              EXTERNAL_IP=$(kubectl get service demoapp | awk '{print $4}' | tail -n1)
+              echo "Checking external IP: ${EXTERNAL_IP}"
+              if [ -n "${EXTERNAL_IP}" ] && [ -z $(echo "${EXTERNAL_IP}" | grep "pending") ]; then
+                break
+              fi
+              echo "Waiting for external IP to be ready: ${EXTERNAL_IP}"
+              sleep 10
+            done
+            sleep 180
+            curl -s --retry 10 "http://$EXTERNAL_IP" | grep "<< parameters.expected-version-info >>"
 
 workflows:
   default:
@@ -209,7 +276,7 @@ workflows:
           context: slack-secrets
           requires: [lint-test-app]
       - deploy-eks:
-          cluster-name: eksctl-demo
+          cluster-name: devops-capstone
           aws-region: $AWS_DEFAULT_REGION
           docker-image-tag:  "build-${CIRCLE_WORKFLOW_ID:0:7}"
           version-info: "build-${CIRCLE_WORKFLOW_ID:0:7}"

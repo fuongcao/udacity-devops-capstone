@@ -1,11 +1,11 @@
 # Create dockerpath
 account=caohoaiphuong
 dockername=devops-capstone
-version=v1.0.0
+version=build-initial
 dockerpath=$dockername:$version
 
 docker --version
-docker build -t $dockerpath .
+docker build -t $dockerpath ../../.
 
 # Authenticate & tag
 echo "Docker ID and Image: $dockerpath"
