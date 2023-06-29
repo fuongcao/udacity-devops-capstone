@@ -274,5 +274,6 @@ workflows:
           version-info: "build-${CIRCLE_WORKFLOW_ID:0:7}"
           requires: [build-docker]
       - smoke-test:
+          cluster-name: devops-capstone
           requires: [deploy-eks]
 
