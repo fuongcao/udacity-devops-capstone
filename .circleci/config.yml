@@ -284,15 +284,28 @@ jobs:
             curl -s "http://$NPROD_DNS" | grep "Vite + React"
 
   promote-production:
-    executor: awscli-executor
+    docker:
+      - image: cimg/base:stable
     steps:
       - attach_workspace:
-          at: /root/workspace 
+          at: /home/circleci/workspace 
       - checkout
+      - run:
+          name: "Install AWS CLI"
+          command: |
+            ls -la
+            if aws --version | grep "aws-cli/" > /dev/null
+            then
+              echo "AWS CLI is already installed, skipping installation."
+              exit 0
+            fi
+            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+            unzip awscliv2.zip
+            sudo ./aws/install
       - run:
           name: Routing traffic
           command: |
-            NPROD_DNS=$(/root/workspace/nprod_dns)
+            NPROD_DNS=$(cat /home/circleci/workspace/nprod_dns)
             echo "NPROD_DNS:$NPROD_DNS"
             aws cloudformation deploy \
               --template-file deployment/stack/cloudfront.yml \
